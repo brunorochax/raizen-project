@@ -84,8 +84,10 @@ class ExtractDataFromPivot(object):
         for key_row, value_row in value_row_column.items():
             for key_column, value_column in value_row.items():
 
-                year_month_list.append(f'{year_column.get(key_column)}_\
-                    {month_row.get(key_row)}')
+                print(type(value_column))
+
+                year_month_list.append(f'{year_column.get(key_column)}_' \
+                    f'{month_row.get(key_row)}')
                 uf_list.append(uf)
                 product_list.append(product)
                 unit_list.append(unit)
