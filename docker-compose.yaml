@@ -1,0 +1,55 @@
+version: '3.8'
+services:
+    win-py-runner:
+        privileged: true
+        image: brunosousax/ubuntukvm:latest
+        ports:
+            - "22:22"
+            - "3389:3389"
+        volumes:
+            - /sys/fs/cgroup:/sys/fs/cgroup:rw
+            - ./input_files:/input_files
+            - ./output_files:/output_files
+        devices:
+            - /dev/kvm
+            - /dev/net/tun
+        cap_add:
+            - NET_ADMIN
+            - SYS_ADMIN
+    postgres:
+        image: postgres
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+    scheduler:
+        image: apache/airflow
+        command: scheduler
+        restart: on-failure
+        depends_on:
+            - postgres
+        env_file:
+            - .env
+        volumes:
+            - ./pipeline/dags:/opt/airflow/dags
+            - ./pipeline/logs:/opt/airflow/logs
+            - ./input_files:/input_files
+            - ./output_files:/output_files
+    webserver:
+        image: apache/airflow
+        entrypoint: /entrypoint.sh
+        restart: on-failure
+        depends_on:
+            - postgres
+            - scheduler
+        env_file:
+            - .env
+        volumes:
+            - ./pipeline/dags:/opt/airflow/dags
+            - ./pipeline/logs:/opt/airflow/logs
+            - ./scripts:/opt/airflow/scripts
+            - ./input_files:/input_files
+            - ./output_files:/output_files
+            - ./entrypoint.sh:/entrypoint.sh
+        ports:
+            - "8080:8080"
