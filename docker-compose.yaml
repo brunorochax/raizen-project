@@ -2,8 +2,11 @@ version: '3.8'
 services:
     win-py-runner:
         privileged: true
+        tty: true
         image: brunosousax/ubuntukvm:latest
-        ports:
+        command: sleep infinity
+        restart: on-failure
+        ports:  
             - "22:22"
             - "3389:3389"
         volumes:
@@ -17,13 +20,14 @@ services:
             - NET_ADMIN
             - SYS_ADMIN
     postgres:
-        image: postgres
+        image: postgres:13.3
+        restart: on-failure
         environment:
             - POSTGRES_USER=airflow
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
     scheduler:
-        image: apache/airflow
+        image: apache/airflow:2.1.1
         command: scheduler
         restart: on-failure
         depends_on:
@@ -35,8 +39,9 @@ services:
             - ./pipeline/logs:/opt/airflow/logs
             - ./input_files:/input_files
             - ./output_files:/output_files
+            - ./airflow.cfg:/opt/airflow/airflow.cfg
     webserver:
-        image: apache/airflow
+        image: apache/airflow:2.1.1
         entrypoint: /entrypoint.sh
         restart: on-failure
         depends_on:
@@ -51,5 +56,6 @@ services:
             - ./input_files:/input_files
             - ./output_files:/output_files
             - ./entrypoint.sh:/entrypoint.sh
+            - ./airflow.cfg:/opt/airflow/airflow.cfg
         ports:
             - "8080:8080"

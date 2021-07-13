@@ -2,6 +2,8 @@
 set -eou pipefail
 
 echo "Starting vagrant environment.."
+echo "Flushing iptables.."
+iptables --flush
 chown root:kvm /dev/kvm
 service libvirtd start
 service virtlogd start
@@ -32,5 +34,7 @@ iptables -D FORWARD -o virbr1 -j REJECT --reject-with icmp-port-unreachable
 iptables -D FORWARD -i virbr1 -j REJECT --reject-with icmp-port-unreachable
 iptables -D FORWARD -o virbr0 -j REJECT --reject-with icmp-port-unreachable
 iptables -D FORWARD -i virbr0 -j REJECT --reject-with icmp-port-unreachable
+
+echo "Firewall rules were configured with success."
 
 exec "$@"
