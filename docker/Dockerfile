@@ -1,18 +1,27 @@
-FROM ubuntu:18.04
+FROM jrei/systemd-ubuntu:18.04
 
-RUN apt-get update -y
+ENV VAGRANT_VERSION=2.2.16
 
-RUN apt-get install -y qemu-kvm libvirt-daemon-system libvirt-dev
-RUN apt-get install -y linux-image-4.18.0-18-generic
-RUN apt-get install -y curl net-tools jq
+# Utils
+RUN apt update
+RUN apt -y install \
+    wget \
+    gnupg2 \
+    systemd \
+    software-properties-common \
+    iptables
 
-RUN curl -O https://releases.hashicorp.com/vagrant/2.2.10/vagrant_2.2.10_x86_64.deb
-RUN dpkg -i vagrant_2.2.10_x86_64.deb
+# Virtualbox installation
+RUN wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | apt-key add -
+RUN wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | apt-key add -
+RUN add-apt-repository "deb https://download.virtualbox.org/virtualbox/debian bionic contrib"
+RUN apt update 
+RUN apt-get -y install virtualbox-6.1 virtualbox-dkms dkms
 
-RUN vagrant plugin install vagrant-libvirt
-RUN vagrant box add --provider libvirt peru/windows-10-enterprise-x64-eval
-RUN vagrant init peru/windows-10-enterprise-x64-eval
+# Vagrant installation
+RUN wget -q https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/vagrant_${VAGRANT_VERSION}_x86_64.deb
+RUN dpkg -i vagrant_${VAGRANT_VERSION}_x86_64.deb
 
-COPY startup.sh /
-
-ENTRYPOINT ["/startup.sh"]
+RUN vagrant box add senglin/win-10-enterprise-vs2015community
+RUN vagrant init senglin/win-10-enterprise-vs2015community
+RUN vagrant plugin install vagrant-vbguest

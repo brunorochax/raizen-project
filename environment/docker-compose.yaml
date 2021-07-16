@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+    win-py-runner:
+        network_mode: host
+        privileged: true
+        image: brunosousax/vagrant-vbox:latest
+        entrypoint: /entrypoint.sh
+        restart: on-failure
+        command: sleep infinity
+        volumes:
+            - /sys/fs/cgroup:/sys/fs/cgroup:rw
+            - /tmp:/tmp
+            - ../pipeline/input_files:/input_files
+            - ../pipeline/output_files:/output_files
+            - ../docker/entrypoint.sh:/entrypoint.sh
+        devices:
+            - /dev/vboxdrv:/dev/vboxdrv
+            - /dev/kvm
+            - /dev/net/tun
+        cap_add:
+            - NET_ADMIN
+            - SYS_ADMIN
+    postgres:
+        network_mode: host
+        image: postgres:13.3
+        restart: on-failure
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+    scheduler:
+        network_mode: host
+        image: apache/airflow:2.1.1
+        command: scheduler
+        restart: on-failure
+        depends_on:
+            - postgres
+        env_file:
+            - .env
+        volumes:
+            - ../pipeline/dags:/opt/airflow/dags
+            - ../pipeline/logs:/opt/airflow/logs
+            - ../pipeline/input_files:/input_files
+            - ../pipeline/output_files:/output_files
+            - ./airflow/airflow.cfg:/opt/airflow/airflow.cfg
+    webserver:
+        network_mode: host
+        image: apache/airflow:2.1.1
+        entrypoint: /entrypoint.sh
+        restart: on-failure
+        depends_on:
+            - postgres
+            - scheduler
+        env_file:
+            - .env
+        volumes:
+            - ../pipeline/dags:/opt/airflow/dags
+            - ../pipeline/logs:/opt/airflow/logs
+            - ../pipeline/input_files:/input_files
+            - ../pipeline/output_files:/output_files
+            - ./airflow/airflow.cfg:/opt/airflow/airflow.cfg
+            - ./airflow/entrypoint.sh:/entrypoint.sh
