@@ -9,7 +9,9 @@ RUN apt -y install \
     gnupg2 \
     systemd \
     software-properties-common \
-    iptables
+    iptables \
+    ssh \
+    net-tools
 
 # Virtualbox installation
 RUN wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | apt-key add -

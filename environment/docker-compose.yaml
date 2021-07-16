@@ -1,12 +1,15 @@
 version: '3.8'
 services:
     win-py-runner:
-        network_mode: host
         privileged: true
         image: brunosousax/vagrant-vbox:latest
         entrypoint: /entrypoint.sh
         restart: on-failure
         command: sleep infinity
+        ports:
+            - "22:22"
+            - "2222:2222"
+            - "3389:3389"
         volumes:
             - /sys/fs/cgroup:/sys/fs/cgroup:rw
             - /tmp:/tmp
@@ -21,7 +24,6 @@ services:
             - NET_ADMIN
             - SYS_ADMIN
     postgres:
-        network_mode: host
         image: postgres:13.3
         restart: on-failure
         environment:
@@ -29,7 +31,6 @@ services:
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
     scheduler:
-        network_mode: host
         image: apache/airflow:2.1.1
         command: scheduler
         restart: on-failure
@@ -44,7 +45,6 @@ services:
             - ../pipeline/output_files:/output_files
             - ./airflow/airflow.cfg:/opt/airflow/airflow.cfg
     webserver:
-        network_mode: host
         image: apache/airflow:2.1.1
         entrypoint: /entrypoint.sh
         restart: on-failure
@@ -53,6 +53,8 @@ services:
             - scheduler
         env_file:
             - .env
+        ports:
+            - "8080:8080"
         volumes:
             - ../pipeline/dags:/opt/airflow/dags
             - ../pipeline/logs:/opt/airflow/logs
